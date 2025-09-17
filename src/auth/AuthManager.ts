@@ -44,8 +44,8 @@ export class AuthManager {
   private cacheFile: string;
 
   constructor() {
-    // API URL is optional during construction, will be checked when auth is needed
-    this.apiUrl = process.env.JAUMEMORY_API_URL || '';
+    // Default to production API if not specified
+    this.apiUrl = process.env.JAUMEMORY_API_URL || 'https://mem.jau.app';
 
     this.cacheFile = path.join(process.cwd(), '.auth-cache', 'credentials.json');
 

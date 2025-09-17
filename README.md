@@ -17,7 +17,7 @@ A Model Context Protocol (MCP) server that provides persistent memory capabiliti
 
 - Node.js 18.0.0 or higher
 - npm or yarn
-- JauMemory account (free tier available at [jaumemory.com](https://jaumemory.com))
+- JauMemory account (free tier available at [mem.jau.app](https://mem.jau.app))
 
 ## Installation
 
@@ -52,6 +52,8 @@ Add to your Claude desktop configuration file:
       "command": "npx",
       "args": ["@jaumemory/mcp-server"],
       "env": {
+        "JAUMEMORY_API_URL": "https://mem.jau.app",
+        "JAUMEMORY_GRPC_URL": "mem.jau.app:50051",
         "JAUMEMORY_USERNAME": "your-username",
         "JAUMEMORY_EMAIL": "your-email@example.com"
       }
@@ -65,6 +67,10 @@ Add to your Claude desktop configuration file:
 Create a `.env` file in the project root:
 
 ```env
+# Production API Configuration
+JAUMEMORY_API_URL=https://mem.jau.app
+JAUMEMORY_GRPC_URL=mem.jau.app:50051
+
 # JauMemory Credentials
 JAUMEMORY_USERNAME=your-username
 JAUMEMORY_EMAIL=your-email@example.com
@@ -288,10 +294,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📖 [Documentation](https://docs.jaumemory.com)
+- 📖 [Documentation](https://mem.jau.app/docs)
 - 🐛 [Issue Tracker](https://github.com/Jau-app/jaumemory-mcp-server/issues)
 - 💬 [Discussions](https://github.com/Jau-app/jaumemory-mcp-server/discussions)
-- 🌐 [JauMemory Website](https://jaumemory.com)
+- 🌐 [JauMemory Website](https://mem.jau.app)
 
 ## Acknowledgments
 

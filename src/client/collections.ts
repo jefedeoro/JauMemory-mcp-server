@@ -6,10 +6,8 @@ import { CollectionsServiceClient } from '../grpc/clients/collections.js';
 import { AuthManager } from '../auth/AuthManager.js';
 
 export async function createCollectionsClient(authManager: AuthManager): Promise<CollectionsServiceClient> {
-  const address = process.env.JAUMEMORY_GRPC_URL;
-  if (!address) {
-    throw new Error('JAUMEMORY_GRPC_URL environment variable is required');
-  }
+  // Default to production URL if not specified
+  const address = process.env.JAUMEMORY_GRPC_URL || 'mem.jau.app:50051';
   
   const useTls = !address.includes('localhost') && !address.includes('127.0.0.1');
   

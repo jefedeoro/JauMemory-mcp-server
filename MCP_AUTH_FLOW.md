@@ -84,7 +84,7 @@ Required for dual verification:
 - `JAUMEMORY_AUTH_TOKEN_MANUAL` - The token shown in browser
 
 Configuration (optional):
-- `JAUMEMORY_API_URL` - API endpoint (default: http://localhost:8091)
-- `JAUMEMORY_GRPC_URL` - gRPC endpoint (default: localhost:50062)
+- `JAUMEMORY_API_URL` - API endpoint (default: https://mem.jau.app)
+- `JAUMEMORY_GRPC_URL` - gRPC endpoint (default: mem.jau.app:50051)
 
 After successful authentication, the server caches credentials for reconnection.

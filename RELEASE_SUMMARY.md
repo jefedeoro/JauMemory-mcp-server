@@ -128,6 +128,6 @@ npm run build
 
 ---
 
-Package prepared by: Claude & jefe2
+Package prepared by: Jau Team
 Date: 2025-09-16
 Status: **Ready for Public Release** 🚀
