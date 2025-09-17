@@ -1,0 +1,163 @@
+syntax = "proto3";
+
+package jaumemory.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+// Memory service for CRUD operations on memories
+service MemoryService {
+  // Create a new memory
+  rpc CreateMemory(CreateMemoryRequest) returns (Memory);
+  
+  // Retrieve memories based on search criteria
+  rpc RecallMemories(RecallMemoriesRequest) returns (RecallMemoriesResponse);
+  
+  // Update an existing memory
+  rpc UpdateMemory(UpdateMemoryRequest) returns (Memory);
+  
+  // Delete a memory
+  rpc DeleteMemory(DeleteMemoryRequest) returns (google.protobuf.Empty);
+  
+  // Get memory by ID
+  rpc GetMemory(GetMemoryRequest) returns (Memory);
+  
+  // Batch operations
+  rpc BatchCreateMemories(BatchCreateMemoriesRequest) returns (BatchCreateMemoriesResponse);
+}
+
+// Consolidation service for merging and organizing memories
+service ConsolidationService {
+  rpc ConsolidateMemories(ConsolidateMemoriesRequest) returns (ConsolidateMemoriesResponse);
+}
+
+// Core memory object
+message Memory {
+  string id = 1;
+  string user_id = 2;
+  string content = 3;
+  optional string context = 4;
+  float importance = 5;
+  repeated string tags = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  int32 access_count = 9;
+  optional string embedding_id = 10;
+  map<string, string> metadata = 11;
+}
+
+// Create memory request
+message CreateMemoryRequest {
+  string user_id = 1;
+  string content = 2;
+  optional string context = 3;
+  optional float importance = 4;
+  repeated string tags = 5;
+  map<string, string> metadata = 6;
+}
+
+// Recall memories request
+message RecallMemoriesRequest {
+  string user_id = 1;
+  optional string query = 2;  // Made optional to allow time-only searches
+  optional int32 limit = 3;
+  optional RecallMode mode = 4;
+  optional TimeRange time_range = 5;
+  repeated string tags = 6;
+  optional float min_importance = 7;
+  optional float fuzzy_threshold = 8;  // Fuzzy search threshold (0.0-1.0)
+  optional float default_score = 9;  // Default relevance score for keyword matches (default: 0.7)
+}
+
+enum RecallMode {
+  RECALL_MODE_UNSPECIFIED = 0;
+  RECALL_MODE_KEYWORD = 1;
+  RECALL_MODE_SEMANTIC = 2;
+  RECALL_MODE_HYBRID = 3;
+}
+
+// Recall memories response
+message RecallMemoriesResponse {
+  repeated MemoryResult results = 1;
+  int32 total_count = 2;
+  string next_page_token = 3;
+}
+
+message MemoryResult {
+  Memory memory = 1;
+  float relevance_score = 2;
+  repeated string matched_terms = 3;
+}
+
+// Update memory request
+message UpdateMemoryRequest {
+  string id = 1;
+  string user_id = 2;
+  optional string content = 3;
+  optional string context = 4;
+  optional float importance = 5;
+  repeated string tags = 6;
+  map<string, string> metadata = 7;
+}
+
+// Delete memory request
+message DeleteMemoryRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+// Get memory request
+message GetMemoryRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+// Batch create request
+message BatchCreateMemoriesRequest {
+  string user_id = 1;
+  repeated CreateMemoryRequest memories = 2;
+}
+
+// Batch create response
+message BatchCreateMemoriesResponse {
+  repeated Memory memories = 1;
+  repeated BatchError errors = 2;
+}
+
+message BatchError {
+  int32 index = 1;
+  string error = 2;
+}
+
+// Consolidation messages
+message ConsolidateMemoriesRequest {
+  string user_id = 1;
+  bool dry_run = 2;
+  optional ConsolidationStrategy strategy = 3;
+}
+
+message ConsolidationStrategy {
+  float similarity_threshold = 1;  // 0.0-1.0, default 0.7
+  int32 min_group_size = 2;       // Minimum memories to trigger consolidation
+  bool archive_originals = 3;      // Whether to keep originals after consolidation
+}
+
+message ConsolidateMemoriesResponse {
+  repeated ConsolidationResult results = 1;
+  int32 memories_consolidated = 2;
+  int32 new_memories_created = 3;
+}
+
+message ConsolidationResult {
+  optional ConsolidationAction action = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message ConsolidationAction {
+  string action_type = 1;  // "merge", "summarize", "archive"
+  repeated string memory_ids = 2;
+  string description = 3;
+  float importance_change = 4;
+}

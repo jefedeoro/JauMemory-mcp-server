@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package jaumemory.v1;
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// Development service for project documentation memory
+service DevelopmentService {
+  // Ingest development documentation
+  rpc IngestDocument(IngestDocumentRequest) returns (IngestDocumentResponse);
+  
+  // Search development docs
+  rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
+  
+  // Get development context for a topic
+  rpc GetContext(GetContextRequest) returns (GetContextResponse);
+  
+  // Get project timeline
+  rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
+}
+
+// Document types
+enum DocType {
+  DOC_TYPE_UNSPECIFIED = 0;
+  DOC_TYPE_PLAN = 1;
+  DOC_TYPE_PROGRESS = 2;
+  DOC_TYPE_COMPLETED = 3;
+  DOC_TYPE_BUG = 4;
+  DOC_TYPE_GUIDE = 5;
+  DOC_TYPE_DECISION = 6;
+  DOC_TYPE_CODE = 7;
+}
+
+// Development document
+message DevDocument {
+  string id = 1;
+  string user_id = 2;
+  string file_path = 3;
+  string file_name = 4;
+  string content = 5;
+  string content_hash = 6;
+  DocType doc_type = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  string git_commit = 10;
+  map<string, string> metadata = 11;
+}
+
+// Document chunk for RAG
+message DocChunk {
+  string id = 1;
+  string document_id = 2;
+  int32 chunk_index = 3;
+  string content = 4;
+  string embedding_id = 5;
+  int32 start_line = 6;
+  int32 end_line = 7;
+  string section_title = 8;
+  map<string, string> metadata = 9;
+}
+
+// Ingest document request
+message IngestDocumentRequest {
+  string user_id = 1;
+  string path = 2;
+  string content = 3;
+  DocType doc_type = 4;
+  map<string, string> metadata = 5;
+}
+
+// Ingest document response
+message IngestDocumentResponse {
+  string document_id = 1;
+  int32 chunks_created = 2;
+}
+
+// Search documents request
+message SearchDocumentsRequest {
+  string user_id = 1;
+  string query = 2;
+  repeated DocType doc_types = 3;
+  optional TimeRange time_range = 4;
+  optional int32 limit = 5;
+  bool use_rag = 6;
+  bool include_chunks = 7;
+}
+
+// Search documents response
+message SearchDocumentsResponse {
+  repeated DocumentResult results = 1;
+}
+
+message DocumentResult {
+  DevDocument document = 1;
+  float relevance_score = 2;
+  repeated DocChunk relevant_chunks = 3;
+  repeated string matched_terms = 4;
+}
+
+// Get context request
+message GetContextRequest {
+  string user_id = 1;
+  string topic = 2;
+  int32 depth = 3;
+  bool include_code = 4;
+  bool include_decisions = 5;
+}
+
+// Get context response
+message GetContextResponse {
+  DevelopmentContext context = 1;
+}
+
+message DevelopmentContext {
+  TopicInfo main_topic = 1;
+  repeated RelatedDocument related_docs = 2;
+  repeated string decisions = 3;
+  repeated string next_steps = 4;
+  map<string, string> metadata = 5;
+}
+
+message TopicInfo {
+  string document_path = 1;
+  repeated string sections = 2;
+  string summary = 3;
+}
+
+message RelatedDocument {
+  string path = 1;
+  string title = 2;
+  float relevance = 3;
+  string excerpt = 4;
+}
+
+// Get timeline request
+message GetTimelineRequest {
+  string user_id = 1;
+  optional TimeRange time_range = 2;
+  repeated string event_types = 3;
+  string format = 4;  // list, tree, graph
+}
+
+// Get timeline response
+message GetTimelineResponse {
+  repeated TimelineEvent events = 1;
+}
+
+message TimelineEvent {
+  string id = 1;
+  string event_type = 2;
+  string title = 3;
+  string description = 4;
+  repeated string document_ids = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  map<string, string> metadata = 7;
+}

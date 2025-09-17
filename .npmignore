@@ -1,0 +1,71 @@
+# Source TypeScript files (ship only compiled JS)
+src/
+*.ts
+!*.d.ts
+
+# Configuration files
+.env
+.env.*
+!.env.example
+tsconfig.json
+
+# Development and test files
+test-*.js
+*.test.js
+*.spec.js
+
+# Documentation source files
+docs/
+*.md
+!README.md
+!CHANGELOG.md
+!LICENSE
+
+# Database files
+*.db
+*.sqlite
+*.sql
+
+# Log files
+*.log
+logs/
+
+# Development/backup files
+.dev/
+.claude/
+
+# Git files
+.git/
+.github/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Authentication files
+.auth-cache/
+auth-credentials.json
+
+# Package files
+*.tgz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

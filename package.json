@@ -1,0 +1,61 @@
+{
+  "name": "@jaumemory/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server providing persistent memory capabilities for AI assistants like Claude",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "uninstall": "tsx src/uninstall.ts"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.4",
+    "@grpc/proto-loader": "^0.7.15",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@types/crypto-js": "^4.2.2",
+    "axios": "^1.10.0",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.5.0",
+    "google-protobuf": "^3.21.4",
+    "keytar": "^7.9.0",
+    "winston": "^3.17.0",
+    "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "^3.15.12",
+    "@types/node": "^22.12.0",
+    "@typescript-eslint/eslint-plugin": "^8.21.0",
+    "@typescript-eslint/parser": "^8.21.0",
+    "eslint": "^9.17.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.4",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jau-app/jaumemory-mcp-server.git"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "jaumemory",
+    "ai",
+    "memory"
+  ],
+  "author": "Jau-app",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jau-app/jaumemory-mcp-server/issues"
+  },
+  "homepage": "https://github.com/Jau-app/jaumemory-mcp-server#readme"
+}

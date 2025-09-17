@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package jaumemory.v1;
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// Pattern service for analyzing memory patterns and user preferences
+service PatternService {
+  // Analyze patterns in user's memories
+  rpc AnalyzePatterns(AnalyzePatternsRequest) returns (AnalyzePatternsResponse);
+  
+  // Get user preferences based on patterns
+  rpc GetUserPreferences(GetUserPreferencesRequest) returns (GetUserPreferencesResponse);
+  
+  // Store a discovered pattern
+  rpc StorePattern(StorePatternRequest) returns (StorePatternResponse);
+  
+  // Get pattern history
+  rpc GetPatternHistory(GetPatternHistoryRequest) returns (GetPatternHistoryResponse);
+  
+  // Get memory statistics
+  rpc GetMemoryStats(GetMemoryStatsRequest) returns (GetMemoryStatsResponse);
+}
+
+// Pattern types
+enum PatternType {
+  PATTERN_TYPE_UNSPECIFIED = 0;
+  PATTERN_TYPE_TOPIC = 1;          // Recurring topics
+  PATTERN_TYPE_BEHAVIOR = 2;       // Behavioral patterns
+  PATTERN_TYPE_PREFERENCE = 3;     // User preferences
+  PATTERN_TYPE_TEMPORAL = 4;       // Time-based patterns
+  PATTERN_TYPE_LINGUISTIC = 5;     // Language patterns
+}
+
+// Core pattern object
+message Pattern {
+  string id = 1;
+  string user_id = 2;
+  string pattern_type = 3;
+  string name = 4;
+  string description = 5;
+  float confidence = 6;
+  int32 occurrence_count = 7;
+  int32 occurrences = 8;
+  repeated string example_memory_ids = 9;
+  repeated string related_memory_ids = 10;
+  map<string, string> metadata = 11;
+  google.protobuf.Timestamp first_seen = 12;
+  google.protobuf.Timestamp last_seen = 13;
+  google.protobuf.Timestamp created_at = 14;
+}
+
+// Analyze patterns request
+message AnalyzePatternsRequest {
+  string user_id = 1;
+  optional TimeRange time_range = 2;
+  repeated PatternType pattern_types = 3;
+  optional int32 min_occurrences = 4;
+  optional float min_confidence = 5;
+}
+
+// Analyze patterns response
+message AnalyzePatternsResponse {
+  repeated Pattern patterns = 1;
+  PatternSummary summary = 2;
+  repeated string insights = 3;
+  int32 total_memories_analyzed = 4;
+}
+
+message PatternSummary {
+  int32 total_patterns = 1;
+  map<string, int32> patterns_by_type = 2;
+  repeated string dominant_topics = 3;
+  float overall_consistency = 4;
+}
+
+// Get user preferences request
+message GetUserPreferencesRequest {
+  string user_id = 1;
+  optional string category = 2;
+}
+
+// Get user preferences response
+message GetUserPreferencesResponse {
+  repeated Preference preferences = 1;
+}
+
+message Preference {
+  string category = 1;
+  string name = 2;
+  string value = 3;
+  float confidence = 4;
+  repeated string evidence_pattern_ids = 5;
+}
+
+// Store pattern request
+message StorePatternRequest {
+  string user_id = 1;
+  string pattern_type = 2;
+  string description = 3;
+  float confidence = 4;
+  repeated string related_memory_ids = 5;
+  Pattern pattern = 6;
+}
+
+// Store pattern response
+message StorePatternResponse {
+  string pattern_id = 1;
+  bool success = 2;
+}
+
+// Get pattern history request
+message GetPatternHistoryRequest {
+  string user_id = 1;
+  optional string pattern_id = 2;
+  optional string pattern_type = 3;
+  optional TimeRange time_range = 4;
+  optional int32 limit = 5;
+}
+
+// Get pattern history response
+message GetPatternHistoryResponse {
+  repeated Pattern patterns = 1;
+  repeated PatternEvent events = 2;
+}
+
+message PatternEvent {
+  string pattern_id = 1;
+  string event_type = 2;  // discovered, reinforced, weakened
+  google.protobuf.Timestamp timestamp = 3;
+  map<string, string> details = 4;
+}
+
+// Get memory stats request
+message GetMemoryStatsRequest {
+  optional string query = 1;
+  repeated string tags = 2;
+  optional float min_importance = 3;
+  optional string start_date = 4;
+  optional string end_date = 5;
+}
+
+// Get memory stats response
+message GetMemoryStatsResponse {
+  int32 total_count = 1;
+  map<string, int32> memories_by_type = 2;
+  repeated StatsTagCount top_tags = 3;
+  map<string, int32> memories_by_importance = 4;
+  repeated StatsKeywordFrequency keyword_frequency = 5;
+}
+
+message StatsTagCount {
+  string tag = 1;
+  int32 count = 2;
+}
+
+message StatsKeywordFrequency {
+  string keyword = 1;
+  int32 frequency = 2;
+}

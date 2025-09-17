@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package jaumemory.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Vector service for embedding and similarity operations
+service VectorService {
+  // Generate embeddings for text
+  rpc GenerateEmbedding(GenerateEmbeddingRequest) returns (GenerateEmbeddingResponse);
+  
+  // Search for similar vectors
+  rpc SearchSimilar(SearchSimilarRequest) returns (SearchSimilarResponse);
+  
+  // Store embedding
+  rpc StoreEmbedding(StoreEmbeddingRequest) returns (StoreEmbeddingResponse);
+  
+  // Delete embedding
+  rpc DeleteEmbedding(DeleteEmbeddingRequest) returns (DeleteEmbeddingResponse);
+  
+  // Batch generate embeddings
+  rpc BatchGenerateEmbeddings(BatchGenerateEmbeddingsRequest) returns (BatchGenerateEmbeddingsResponse);
+}
+
+// Embedding object
+message Embedding {
+  string id = 1;
+  string memory_id = 2;
+  repeated float vector = 3;
+  string model = 4;
+  int32 dimensions = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// Generate embedding request
+message GenerateEmbeddingRequest {
+  string text = 1;
+  optional string model = 2;
+  optional string memory_id = 3;
+}
+
+// Generate embedding response
+message GenerateEmbeddingResponse {
+  Embedding embedding = 1;
+  int32 token_count = 2;
+  int32 dimension = 3;
+}
+
+// Search similar request
+message SearchSimilarRequest {
+  string user_id = 1;
+  oneof query {
+    string text = 2;
+    FloatVector vector = 3;
+    Embedding embedding = 4;
+  }
+  int32 limit = 5;
+  optional float min_score = 6;
+  optional float threshold = 7;
+  map<string, string> filter = 8;
+}
+
+// Wrapper for float vector to use in oneof
+message FloatVector {
+  repeated float values = 1;
+}
+
+// Search similar response
+message SearchSimilarResponse {
+  repeated SimilarityResult results = 1;
+  repeated SimilarVector similar_vectors = 2;
+}
+
+message SimilarVector {
+  string memory_id = 1;
+  float similarity = 2;
+  optional string content = 3;
+}
+
+message SimilarityResult {
+  string memory_id = 1;
+  float score = 2;
+  optional Embedding embedding = 3;
+  map<string, string> metadata = 4;
+}
+
+// Store embedding request
+message StoreEmbeddingRequest {
+  string user_id = 1;
+  string memory_id = 2;
+  repeated float vector = 3;
+  repeated float embedding = 4;
+  string model = 5;
+  map<string, string> metadata = 6;
+}
+
+// Store embedding response
+message StoreEmbeddingResponse {
+  string embedding_id = 1;
+  bool success = 2;
+}
+
+// Delete embedding request
+message DeleteEmbeddingRequest {
+  string embedding_id = 1;
+  optional string memory_id = 2;
+}
+
+// Delete embedding response
+message DeleteEmbeddingResponse {
+  bool success = 1;
+}
+
+// Batch generate embeddings request
+message BatchGenerateEmbeddingsRequest {
+  repeated string texts = 1;
+  optional string model = 2;
+  repeated string memory_ids = 3;
+}
+
+// Batch generate embeddings response
+message BatchGenerateEmbeddingsResponse {
+  repeated Embedding embeddings = 1;
+  repeated EmbeddingResult results = 2;
+  int32 total_tokens = 3;
+}
+
+message EmbeddingResult {
+  string memory_id = 1;
+  Embedding embedding = 2;
+  optional string error = 3;
+}

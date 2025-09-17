@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package jaumemory.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// CollectionService provides gRPC API for managing memory collections
+service CollectionService {
+  // Create a new collection
+  rpc CreateCollection(CreateCollectionRequest) returns (Collection);
+  
+  // Get a collection by ID
+  rpc GetCollection(GetCollectionRequest) returns (Collection);
+  
+  // Update a collection
+  rpc UpdateCollection(UpdateCollectionRequest) returns (Collection);
+  
+  // Delete a collection
+  rpc DeleteCollection(DeleteCollectionRequest) returns (google.protobuf.Empty);
+  
+  // List collections for a user
+  rpc ListCollections(ListCollectionsRequest) returns (CollectionList);
+  
+  // Add a memory to a collection
+  rpc AddMemoryToCollection(AddMemoryToCollectionRequest) returns (google.protobuf.Empty);
+  
+  // Remove a memory from a collection
+  rpc RemoveMemoryFromCollection(RemoveMemoryFromCollectionRequest) returns (google.protobuf.Empty);
+  
+  // Get collection with all its memories
+  rpc GetCollectionWithMemories(GetCollectionRequest) returns (CollectionWithMemories);
+  
+  // Get statistics for a collection
+  rpc GetCollectionStats(GetCollectionRequest) returns (CollectionStats);
+  
+  // Consolidate all memories in a collection
+  rpc ConsolidateCollection(ConsolidateCollectionRequest) returns (ConsolidateCollectionResponse);
+}
+
+// Basic collection message
+message Collection {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string description = 4;
+  int64 memory_count = 5;
+  bool is_public = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// Collection with memory details
+message CollectionWithMemories {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string description = 4;
+  int64 memory_count = 5;
+  bool is_public = 6;
+  repeated CollectionMemory memories = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// Memory within a collection
+message CollectionMemory {
+  string id = 1;
+  string content = 2;
+  string memory_type = 3;
+  float importance = 4;
+  repeated string tags = 5;
+  google.protobuf.Timestamp added_at = 6;
+}
+
+// Request to create a collection
+message CreateCollectionRequest {
+  string name = 1;
+  string description = 2;
+  repeated string memory_ids = 3;
+}
+
+// Request to get a collection
+message GetCollectionRequest {
+  string collection_id = 1;
+}
+
+// Request to update a collection
+message UpdateCollectionRequest {
+  string collection_id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+// Request to delete a collection
+message DeleteCollectionRequest {
+  string collection_id = 1;
+}
+
+// Request to list collections
+message ListCollectionsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+  string sort_by = 3; // "created_at", "updated_at", "name", "memory_count"
+  bool sort_desc = 4;
+}
+
+// Response with list of collections
+message CollectionList {
+  repeated Collection collections = 1;
+  int32 total = 2;
+}
+
+// Request to add memory to collection
+message AddMemoryToCollectionRequest {
+  string collection_id = 1;
+  string memory_id = 2;
+}
+
+// Request to remove memory from collection
+message RemoveMemoryFromCollectionRequest {
+  string collection_id = 1;
+  string memory_id = 2;
+}
+
+// Collection statistics
+message CollectionStats {
+  int64 memory_count = 1;
+  double total_importance = 2;
+  repeated MemoryTypeCount memory_types = 3;
+  repeated TagCount top_tags = 4;
+  DateRange date_range = 5;
+}
+
+// Memory type count
+message MemoryTypeCount {
+  string memory_type = 1;
+  int64 count = 2;
+}
+
+// Tag count
+message TagCount {
+  string tag = 1;
+  int64 count = 2;
+}
+
+// Date range
+message DateRange {
+  google.protobuf.Timestamp earliest = 1;
+  google.protobuf.Timestamp latest = 2;
+}
+
+// Request to consolidate collection
+message ConsolidateCollectionRequest {
+  string collection_id = 1;
+  bool summarize_only = 2;
+  string title = 3;
+}
+
+// Response for consolidate collection
+message ConsolidateCollectionResponse {
+  string consolidated_memory_id = 1;
+  string summary = 2;
+  int32 memories_consolidated = 3;
+  bool success = 4;
+  string message = 5;
+}

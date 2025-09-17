@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package jaumemory.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service AgentService {
+    // Agent management
+    rpc CreateAgent(CreateAgentRequest) returns (Agent);
+    rpc GetAgent(GetAgentRequest) returns (Agent);
+    rpc ListAgents(ListAgentsRequest) returns (AgentList);
+    rpc UpdateAgent(UpdateAgentRequest) returns (Agent);
+    rpc UpdateAgentName(UpdateAgentNameRequest) returns (Agent);
+    
+    // Agent memory operations
+    rpc RememberForAgent(AgentMemoryRequest) returns (AgentMemoryResponse);
+    rpc LinkMemoryToAgent(LinkMemoryToAgentRequest) returns (google.protobuf.Empty);
+    rpc RecallAgentMemories(AgentRecallRequest) returns (AgentMemoryList);
+    
+    // Error learning system
+    rpc HandleErrorLearning(ErrorLearningRequest) returns (ErrorLearningResponse);
+    rpc SaveErrorSolution(ErrorSolutionRequest) returns (google.protobuf.Empty);
+    rpc RecordFailedAttempt(FailedAttemptRequest) returns (google.protobuf.Empty);
+    
+    // Reflections
+    rpc CreateReflection(ReflectionRequest) returns (google.protobuf.Empty);
+    rpc GetReflections(GetReflectionsRequest) returns (ReflectionList);
+}
+
+// Agent messages
+message Agent {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    repeated string personality_traits = 4;
+    repeated string specializations = 5;
+    repeated string update_prompts = 6;
+    string status = 7;
+    int32 success_count = 8;
+    int32 error_count = 9;
+    double learning_rate = 10;
+    string created_by = 11;
+    google.protobuf.Timestamp created_at = 12;
+    google.protobuf.Timestamp updated_at = 13;
+    int32 collaboration_count = 14;
+    google.protobuf.Timestamp last_error_at = 15;
+    google.protobuf.Timestamp last_success_at = 16;
+}
+
+message CreateAgentRequest {
+    string user_id = 1;  // Required for multi-user support
+    string name = 2;
+    repeated string personality_traits = 3;
+    repeated string specializations = 4;
+    repeated string update_prompts = 5;
+    string created_by = 6;
+    optional string id = 7;  // Optional: if not provided, will be auto-generated
+    optional double initial_learning_rate = 8;  // Optional: defaults to 0.5
+}
+
+message GetAgentRequest {
+    string user_id = 1;
+    string agent_id = 2;
+}
+
+message UpdateAgentRequest {
+    string user_id = 1;
+    string agent_id = 2;
+    repeated string personality_traits = 3;
+    repeated string specializations = 4;
+    repeated string update_prompts = 5;
+    string status = 6;
+    optional float learning_rate = 7;
+}
+
+message UpdateAgentNameRequest {
+    string user_id = 1;
+    string agent_id = 2;
+    string new_name = 3;
+}
+
+message ListAgentsRequest {
+    string user_id = 1;
+    optional string status = 2;
+}
+
+message AgentList {
+    repeated Agent agents = 1;
+}
+
+// Agent memory messages
+message AgentMemoryRequest {
+    string user_id = 1;
+    string agent_id = 2;
+    optional string memory_id = 3;
+    string content = 4;
+    string category = 5;
+    optional string project_context = 6;
+    map<string, string> metadata = 7;
+}
+
+message AgentMemoryResponse {
+    string memory_id = 1;
+    bool success = 2;
+    optional string error = 3;
+    optional string message = 4;
+}
+
+message LinkMemoryToAgentRequest {
+    string user_id = 1;
+    string agent_id = 2;
+    string memory_id = 3;
+    string category = 4;
+    optional string project_context = 5;
+}
+
+message AgentRecallRequest {
+    string agent_id = 1;
+    optional string query = 2;
+    optional string category = 3;
+    optional string project = 4;
+    optional string project_context = 5;
+    int32 limit = 6;
+}
+
+message AgentMemory {
+    string id = 1;
+    string memory_id = 2;
+    string agent_id = 3;
+    string content = 4;
+    string category = 5;
+    optional string project_context = 6;
+    float importance = 7;
+    google.protobuf.Timestamp created_at = 8;
+    map<string, string> metadata = 9;
+}
+
+message AgentMemoryList {
+    repeated AgentMemory memories = 1;
+}
+
+// Error learning messages
+message ErrorLearningRequest {
+    string agent_id = 1;
+    string error_signature = 2;
+    string error_type = 3;
+    string error_message = 4;
+    string context = 5;
+    string context_snapshot = 6;
+    string attempted_solution = 7;
+    optional string project_context = 8;
+}
+
+message ErrorLearningResponse {
+    string response_type = 1;
+    optional string pattern_id = 2;
+    optional string guidance = 3;
+    optional SolutionFound previous_solution = 4;
+    int32 attempt_count = 5;
+    
+    oneof response {
+        FirstOccurrence first_occurrence = 6;
+        SolutionFound solution_found = 7;
+        PreviousAttemptsFailed previous_attempts_failed = 8;
+        NewProblem new_problem = 9;
+    }
+}
+
+message FirstOccurrence {
+    string message = 1;
+}
+
+message SolutionFound {
+    string solution = 1;
+    string explanation = 2;
+    float success_rate = 3;
+}
+
+message PreviousAttemptsFailed {
+    repeated FailedAttempt attempts = 1;
+    string suggestion = 2;
+}
+
+message NewProblem {
+    string message = 1;
+    string error_signature = 2;
+}
+
+message FailedAttempt {
+    string attempt_description = 1;
+    optional string why_failed = 2;
+    optional string agent_id = 3;
+    google.protobuf.Timestamp created_at = 4;
+}
+
+message ErrorSolutionRequest {
+    string agent_id = 1;
+    string pattern_id = 2;
+    string error_signature = 3;
+    string solution = 4;
+    string explanation = 5;
+    repeated string verification_steps = 6;
+}
+
+message FailedAttemptRequest {
+    string agent_id = 1;
+    string pattern_id = 2;
+    string error_signature = 3;
+    string attempt = 4;
+    string attempted_solution = 5;
+    optional string why_failed = 6;
+}
+
+// Reflection messages
+message ReflectionRequest {
+    string agent_id = 1;
+    string reflection_type = 2;
+    string content = 3;
+    repeated string lessons_learned = 4;
+    repeated string related_agents = 5;
+}
+
+message GetReflectionsRequest {
+    string agent_id = 1;
+    optional string reflection_type = 2;
+    int32 limit = 3;
+}
+
+message Reflection {
+    string id = 1;
+    string agent_id = 2;
+    string reflection_type = 3;
+    string content = 4;
+    repeated string lessons_learned = 5;
+    repeated string related_agents = 6;
+    google.protobuf.Timestamp created_at = 7;
+}
+
+message ReflectionList {
+    repeated Reflection reflections = 1;
+}
