@@ -5,9 +5,11 @@
  */
 
 import axios from 'axios';
-import { createDecipheriv, createHash } from 'crypto';
+import { createDecipheriv, createHash, pbkdf2Sync, randomBytes } from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as os from 'os';
+import CryptoJS from 'crypto-js';
 import { logger } from '../utils/logger.js';
 
 interface AuthCredentials {
@@ -448,36 +450,156 @@ export class AuthManager {
     return decrypted.toString('utf8');
   }
 
-  private async loadCachedCredentials(): Promise<void> {
+  /**
+   * Get encryption key derived from machine-specific data using proper KDF
+   * Uses PBKDF2 with persistent salt for secure key derivation
+   */
+  private async getOrCreateEncryptionKey(): Promise<string> {
+    const saltFile = path.join(path.dirname(this.cacheFile), '.salt');
+    let salt: Buffer;
+
     try {
-      const data = await fs.readFile(this.cacheFile, 'utf-8');
-      this.credentials = JSON.parse(data);
-      logger.debug('Loaded cached credentials');
+      // Try to read existing salt
+      const saltHex = await fs.readFile(saltFile, 'utf-8');
+      salt = Buffer.from(saltHex, 'hex');
+    } catch {
+      // Generate new salt on first use
+      salt = randomBytes(32);
+      await fs.mkdir(path.dirname(saltFile), { recursive: true });
+      await fs.writeFile(saltFile, salt.toString('hex'));
+
+      // Set restrictive permissions on salt file
+      if (process.platform !== 'win32') {
+        await fs.chmod(saltFile, 0o600);
+      }
+
+      logger.debug('Generated new encryption salt');
+    }
+
+    // Create machine-specific identifier
+    const machineId = `${os.hostname()}-${os.userInfo().username}-${process.platform}`;
+
+    // Use PBKDF2 with 100,000 iterations (NIST recommendation for 2025)
+    const key = pbkdf2Sync(machineId, salt, 100000, 32, 'sha256');
+
+    return key.toString('hex').substring(0, 32);
+  }
+
+  /**
+   * Try to use keytar (OS keychain) if available, otherwise fall back to encrypted file
+   */
+  private async loadCachedCredentials(): Promise<void> {
+    // Try keytar first (if available)
+    const keytarLoaded = await this.tryLoadFromKeytar();
+    if (keytarLoaded) {
+      logger.debug('Loaded credentials from OS keychain');
+      return;
+    }
+
+    // Fall back to encrypted file
+    try {
+      const encryptedData = await fs.readFile(this.cacheFile, 'utf-8');
+      const encryptionKey = await this.getOrCreateEncryptionKey();
+      const decrypted = CryptoJS.AES.decrypt(encryptedData, encryptionKey).toString(CryptoJS.enc.Utf8);
+      this.credentials = JSON.parse(decrypted);
+      logger.debug('Loaded encrypted credentials from file');
     } catch (error) {
-      // No cached credentials
+      // No cached credentials or decryption failed
+      logger.debug('No cached credentials found');
     }
   }
 
   private async saveCachedCredentials(): Promise<void> {
     if (!this.credentials) return;
 
+    // Try keytar first (if available)
+    const keytarSaved = await this.trySaveToKeytar();
+    if (keytarSaved) {
+      logger.debug('Saved credentials to OS keychain');
+      return;
+    }
+
+    // Fall back to encrypted file
     try {
       await fs.mkdir(path.dirname(this.cacheFile), { recursive: true });
-      await fs.writeFile(this.cacheFile, JSON.stringify(this.credentials, null, 2));
-      logger.debug('Saved credentials to cache');
+      const credentialsJson = JSON.stringify(this.credentials);
+      const encryptionKey = await this.getOrCreateEncryptionKey();
+      const encrypted = CryptoJS.AES.encrypt(credentialsJson, encryptionKey).toString();
+      await fs.writeFile(this.cacheFile, encrypted);
+
+      // Set file permissions to user-only (Unix systems)
+      if (process.platform !== 'win32') {
+        await fs.chmod(this.cacheFile, 0o600);
+      }
+
+      logger.debug('Saved encrypted credentials to file');
     } catch (error) {
       logger.warn('Failed to save credentials to cache:', error);
     }
   }
 
+  /**
+   * Try to load credentials from OS keychain using keytar (optional dependency)
+   */
+  private async tryLoadFromKeytar(): Promise<boolean> {
+    try {
+      // Dynamic import - won't fail if keytar is not installed
+      const keytar = await import('keytar');
+      const service = 'jaumemory-mcp';
+      const account = 'default';
+
+      const password = await keytar.getPassword(service, account);
+      if (password) {
+        this.credentials = JSON.parse(password);
+        return true;
+      }
+    } catch (error) {
+      // keytar not available or failed to load
+      logger.debug('Keytar not available, using file-based storage');
+    }
+    return false;
+  }
+
+  /**
+   * Try to save credentials to OS keychain using keytar (optional dependency)
+   */
+  private async trySaveToKeytar(): Promise<boolean> {
+    if (!this.credentials) return false;
+
+    try {
+      // Dynamic import - won't fail if keytar is not installed
+      const keytar = await import('keytar');
+      const service = 'jaumemory-mcp';
+      const account = 'default';
+
+      await keytar.setPassword(service, account, JSON.stringify(this.credentials));
+      return true;
+    } catch (error) {
+      // keytar not available or failed to save
+      logger.debug('Keytar not available, using file-based storage');
+    }
+    return false;
+  }
+
   async clearSession(): Promise<void> {
     // Clear cached credentials on logout
     this.credentials = undefined;
-    
+
+    // Try to delete from keytar first
+    try {
+      const keytar = await import('keytar');
+      const service = 'jaumemory-mcp';
+      const account = 'default';
+      await keytar.deletePassword(service, account);
+      logger.debug('Cleared credentials from OS keychain');
+    } catch (error) {
+      // keytar not available
+    }
+
     // Delete the cache file
     try {
       await fs.unlink(this.cacheFile);
-      logger.debug('Cleared cached credentials');
+      logger.debug('Cleared cached credentials file');
     } catch (error) {
       // File might not exist
     }

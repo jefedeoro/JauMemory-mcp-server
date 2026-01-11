@@ -38,68 +38,180 @@ npm run build
 
 ## Configuration
 
-### Claude Desktop Integration
+### Claude Desktop
 
 Add to your Claude desktop configuration file:
 
-**MacOS/Linux**: `~/.config/claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\claude\claude_desktop_config.json`
+**MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "jaumemory": {
       "command": "npx",
-      "args": ["@jaumemory/mcp-server"],
-      "env": {
-        "JAUMEMORY_API_URL": "https://mem.jau.app",
-        "JAUMEMORY_GRPC_URL": "mem.jau.app:50051",
-        "JAUMEMORY_USERNAME": "your-username",
-        "JAUMEMORY_EMAIL": "your-email@example.com"
-      }
+      "args": ["-y", "@jaumemory/mcp-server"]
     }
   }
 }
 ```
 
-### Environment Variables
+**Note**: Claude Desktop works with the `npx` approach without requiring global installation.
 
-Create a `.env` file in the project root:
+### Claude Code
+
+Add to your Claude Code configuration:
+
+**MacOS/Linux**: `~/.config/claude/claude_code_config.json`
+**Windows**: `%APPDATA%\claude\claude_code_config.json`
+
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "npx",
+      "args": ["-y", "@jaumemory/mcp-server"]
+    }
+  }
+}
+```
+
+### Cursor
+
+1. Open Cursor Settings
+2. Navigate to MCP section
+3. Add new MCP server with command: `npx -y @jaumemory/mcp-server`
+
+Or edit configuration file:
+
+**MacOS/Linux**: `~/.cursor/mcp_config.json`
+**Windows**: `%APPDATA%\Cursor\mcp_config.json`
+
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "npx",
+      "args": ["-y", "@jaumemory/mcp-server"]
+    }
+  }
+}
+```
+
+### Cline
+
+**Installation (Required):**
+
+⚠️ **IMPORTANT: Install in the same terminal environment where Cline will run:**
+
+- **Windows (native)**: Install in PowerShell or Command Prompt (the same environment Cline uses)
+- **WSL (Windows Subsystem for Linux)**: Install in WSL terminal for your specific user
+- **macOS/Linux**: Install in your terminal of choice
+
+```bash
+npm install -g @jaumemory/mcp-server
+```
+
+If using both Windows and WSL, install in both environments:
+```bash
+# In Windows PowerShell
+npm install -g @jaumemory/mcp-server
+
+# In WSL terminal
+npm install -g @jaumemory/mcp-server
+```
+
+Add to Cline MCP settings (in your Cline configuration file):
+
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "type": "stdio",
+      "timeout": 60,
+      "command": "npx",
+      "args": ["-y", "@jaumemory/mcp-server"]
+    }
+  }
+}
+```
+
+**Note**: The `"type": "stdio"` and `"timeout": 60` settings are important for Cline compatibility. Installing in the correct terminal environment ensures Cline can find and execute the server. The global installation helps avoid Windows file locking issues.
+
+### Windsurf
+
+Add to Windsurf MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "npx",
+      "args": ["-y", "@jaumemory/mcp-server"]
+    }
+  }
+}
+```
+
+### GitHub Copilot
+
+Add to GitHub Copilot MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "npx",
+      "args": ["-y", "@jaumemory/mcp-server"]
+    }
+  }
+}
+```
+
+### ChatGPT (Plus/Pro Required)
+
+Add to ChatGPT MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "npx",
+      "args": ["-y", "@jaumemory/mcp-server"]
+    }
+  }
+}
+```
+
+### Advanced Configuration (Optional)
+
+Environment variables are **not required** for basic setup. Authentication is handled automatically via the `mcp_login` tool.
+
+However, you can optionally create a `.env` file to pre-configure your username and email:
 
 ```env
-# Production API Configuration
-JAUMEMORY_API_URL=https://mem.jau.app
-JAUMEMORY_GRPC_URL=mem.jau.app:50051
-
-# JauMemory Credentials
+# Optional: Pre-configure credentials (authentication still required via mcp_login)
 JAUMEMORY_USERNAME=your-username
 JAUMEMORY_EMAIL=your-email@example.com
 
-# Optional: Use existing auth hash from web login
-# JAUMEMORY_AUTH_HASH=your-auth-hash-here
-
-# Logging
+# Optional: Logging configuration
 LOG_LEVEL=info
 NODE_ENV=production
 ```
+
+**Note**: Even with environment variables set, you must still authenticate using the `mcp_login` tool on first use.
 
 ## Authentication
 
 ### First-Time Setup
 
-1. Configure your username and email in the environment
-2. Launch Claude Desktop - the MCP server will start automatically
-3. Use the `mcp_login` tool in Claude to initiate authentication
-4. Click the approval link sent to your browser
-5. Complete the authentication in your web browser
-6. The server will automatically store your credentials securely
+1. Launch your AI assistant (Claude Desktop, Cursor, etc.) - the MCP server will start automatically
+2. Use the `mcp_login` tool to initiate authentication
+3. Click the approval link that opens in your browser
+4. Complete the authentication in your web browser
+5. The server will automatically store your credentials securely
 
-### Using Existing Web Login
-
-If you're already logged into JauMemory web app:
-1. Copy your auth hash from browser developer tools
-2. Set `JAUMEMORY_AUTH_HASH` in your environment
-3. The server will use your existing session
+**That's it!** No configuration files or environment variables needed for basic setup.
 
 ## Usage
 
@@ -250,6 +362,55 @@ jaumemory-mcp-server/
 
 ## Troubleshooting
 
+### Windows Installation Issues
+
+If you encounter `TAR_ENTRY_ERROR` errors on Windows when using `npx`:
+
+**Solution 1: Use global installation**
+```bash
+# Run in PowerShell as Administrator
+npm install -g @jaumemory/mcp-server --force
+```
+
+Then update your config to use the global command:
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "jaumemory-mcp-server",
+      "args": []
+    }
+  }
+}
+```
+
+**Solution 2: Clear npm cache**
+```bash
+npm cache clean --force
+npm config set fetch-retries 10
+npm config set fetch-timeout 60000
+npx -y @jaumemory/mcp-server
+```
+
+**Solution 3: Local installation**
+```bash
+mkdir C:\JauMemory
+cd C:\JauMemory
+npm install @jaumemory/mcp-server
+```
+
+Then use in config:
+```json
+{
+  "mcpServers": {
+    "jaumemory": {
+      "command": "node",
+      "args": ["C:\\JauMemory\\node_modules\\@jaumemory\\mcp-server\\dist\\index.js"]
+    }
+  }
+}
+```
+
 ### Authentication Issues
 
 1. Ensure you have a valid JauMemory account
@@ -260,7 +421,7 @@ jaumemory-mcp-server/
 ### Connection Problems
 
 1. Verify internet connection
-2. Check if JauMemory service is available
+2. Check if JauMemory service is available at https://mem.jau.app
 3. Ensure firewall allows HTTPS/gRPC connections
 4. Try clearing auth cache and re-authenticating
 

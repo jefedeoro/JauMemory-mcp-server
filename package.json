@@ -1,6 +1,6 @@
 {
   "name": "@jaumemory/mcp-server",
-  "version": "0.1.2",
+  "version": "0.3.2",
   "description": "MCP server providing persistent memory capabilities for AI assistants like Claude",
   "main": "dist/index.js",
   "type": "module",
@@ -26,9 +26,11 @@
     "crypto-js": "^4.2.0",
     "dotenv": "^16.5.0",
     "google-protobuf": "^3.21.4",
-    "keytar": "^7.9.0",
     "winston": "^3.17.0",
     "zod": "^3.25.56"
+  },
+  "optionalDependencies": {
+    "keytar": "^7.9.0"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.15.12",

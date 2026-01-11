@@ -136,21 +136,35 @@ async function uninstallJauMemoryMCP() {
   
   // 3. Clear keychain/credential store entries
   log('\n3. Clearing stored credentials...', 'blue');
+
+  // Try to use keytar if available (optional dependency)
+  let keytarAvailable = false;
   try {
-    // Try to import keytar for credential management
-    const keytar = await import('keytar');
-    
-    // Remove stored credentials
-    const services = ['jaumemory', 'jaumemory-pg', 'jaumemory-production'];
-    for (const service of services) {
-      const creds = await keytar.findCredentials(service);
-      for (const cred of creds) {
-        await keytar.deletePassword(service, cred.account);
-        log(`  ✓ Removed credentials for ${cred.account}`, 'green');
+    // Dynamic import with type assertion to handle optional dependency
+    const keytar = await import('keytar').catch(() => null);
+
+    if (keytar) {
+      keytarAvailable = true;
+      // Remove stored credentials from OS keychain
+      const services = ['jaumemory', 'jaumemory-pg', 'jaumemory-production', 'jaumemory-mcp'];
+      for (const service of services) {
+        try {
+          const creds = await keytar.findCredentials(service);
+          for (const cred of creds) {
+            await keytar.deletePassword(service, cred.account);
+            log(`  ✓ Removed credentials for ${cred.account} from OS keychain`, 'green');
+          }
+        } catch (err) {
+          // Continue with other services
+        }
       }
     }
   } catch (error) {
-    log('  - Keychain credentials not found or keytar not available', 'yellow');
+    // Keytar not available - this is fine
+  }
+
+  if (!keytarAvailable) {
+    log('  - OS keychain not available (using file-based storage)', 'yellow');
   }
   
   // 4. Clear any temporary files

@@ -12,34 +12,42 @@ import { logger } from '../../utils/logger.js';
 export function loginTool(clients: BackendClients): Tool {
   return {
     name: 'mcp_login',
-    description: 'Initiate MCP authentication flow. Provide your REAL JauMemory username and email to start the manual approval process. NOTE: You MUST click the link provided and approve in your browser. Test accounts will not work.',
+    description: 'Initiate MCP authentication flow. Provide your REAL JauMemory username and email to start the manual approval process. NOTE: You MUST click the link provided and approve in your browser. Test accounts will not work. Username and email can be optionally set via JAUMEMORY_USERNAME and JAUMEMORY_EMAIL environment variables.',
     inputSchema: {
       type: 'object',
       properties: {
         username: {
           type: 'string',
-          description: 'Your REAL JauMemory username (not a test account)'
+          description: 'Your REAL JauMemory username (not a test account). Optional if set in JAUMEMORY_USERNAME env var.'
         },
         email: {
           type: 'string',
-          description: 'Your REAL JauMemory email address (must match your registered account)'
+          description: 'Your REAL JauMemory email address (must match your registered account). Optional if set in JAUMEMORY_EMAIL env var.'
         }
       },
-      required: ['username', 'email']
+      required: []
     },
     handler: async (args: any) => {
       try {
-        const { username, email } = args;
+        // Check for username and email from args or environment
+        const username = args.username || process.env.JAUMEMORY_USERNAME;
+        const email = args.email || process.env.JAUMEMORY_EMAIL;
+
+        if (!username || !email) {
+          throw new Error('Username and email are required. Provide them as parameters or set JAUMEMORY_USERNAME and JAUMEMORY_EMAIL environment variables.');
+        }
         
         logger.info('Initiating MCP login...', { username, email });
-        
+
         // Use the auth manager from clients
         const authManager = clients.auth.authManager;
-        const { requestId, approvalUrl } = await authManager.login(username, email);
-        
-        // Store request ID in authManager for later use
-        // This would normally be stored in AuthManager, but for the tool we'll return it
-        
+        let { requestId, approvalUrl } = await authManager.login(username, email);
+
+        // Fix approval URL if it contains IP address instead of domain
+        if (approvalUrl.includes('216.238.91.120:8091')) {
+          approvalUrl = approvalUrl.replace('http://216.238.91.120:8091', 'https://mem.jau.app');
+        }
+
         return [
           {
             type: 'text',

@@ -9,7 +9,9 @@ export async function createMemoryClient(authManager: AuthManager): Promise<Memo
   // Default to production URL if not specified
   const address = process.env.JAUMEMORY_GRPC_URL || 'mem.jau.app:50051';
 
-  const useTls = !address.includes('localhost') && !address.includes('127.0.0.1');
+  // For now, production gRPC doesn't use TLS (traffic is already encrypted via VPN/internal network)
+  // Only use TLS if explicitly enabled via environment variable
+  const useTls = process.env.JAUMEMORY_GRPC_USE_TLS === 'true';
 
   return new MemoryServiceClient(address, authManager, useTls);
 }

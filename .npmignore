@@ -63,6 +63,7 @@ temp/
 # Authentication files
 .auth-cache/
 auth-credentials.json
+.salt
 
 # Package files
 *.tgz
